@@ -1,36 +1,77 @@
-# 基于机器学习的市场趋势预测系统
+# 基于机器学习的市场预测系统
 
-第13队：刘瀚远、韩启源、曾玺玮、杜凌琳。课程提交整理日期：2026-10-23。
+第13队：刘瀚远、韩启源、曾玺玮、杜凌琳。
 
-## 项目范围
+本项目将市场特征处理、多层感知机训练、模型服务与网页交互连接为完整应用。系统使用 PyTorch 构建分类模型，通过 Flask 提供单条及批量预测接口，结合 Jinja2 和 Chart.js 展示趋势类别、类别概率与训练过程。
 
-本项目是 PyTorch MLP + Flask + Jinja2/Chart.js 的市场趋势分类课程原型，支持单条或批量JSON输入、三类标签与概率输出、训练曲线和健康查询。
+## 功能与界面
 
-数据由他人提供，原始来源与生成流程待核实；仅作为课程演示数据。原13维输入包含 future_7d_return，存在前视信息泄漏。保存模型的97.25%验证准确率不等于真实未来市场预测能力。删除该字段后的补充随机分层实验为81.79%，盘整召回率为0。时间划分末291条全为上涨，98.63%准确率低于恒预测上涨的100%。详见技术报告和verification结果。
+- **趋势分类**：输入市场特征，输出下跌（bearish）、盘整（sideways）和上涨（bullish）三类结果及对应概率。
+- **批量推理**：接收 JSON 对象数组，按输入顺序返回预测结果。
+- **训练可视化**：查询并展示50轮训练与验证准确率、损失记录。
+- **交互与状态查询**：提供默认样例、数值输入、提交状态反馈，以及特征、类别和服务信息查询。
 
-## 安装与启动
+![市场趋势预测交互界面](reports/fig_interface.png)
 
-在项目根目录执行（Windows PowerShell示例）：
+页面集中呈现特征输入、趋势结果和三类概率，支持修改样例后提交预测。
+
+## 快速运行
+
+在项目根目录使用 Windows PowerShell 执行：
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m flask --app app run --host 127.0.0.1 --port 5001
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m flask --app app run --host 127.0.0.1 --port 5001
 ```
 
-浏览器打开 http://127.0.0.1:5001 。已附带模型，无需先训练。Chart.js通过CDN加载，图表需要网络可达。
+浏览器访问 [http://127.0.0.1:5001](http://127.0.0.1:5001)，使用表单中的样例查看分类结果。服务启动时加载 `models/` 内的预训练模型、标准化器和元数据；网页通过网络加载 Chart.js 资源并绘制训练曲线。
 
-`requirements.txt`为原始未锁定依赖；`requirements-reproduced.txt`记录本次实测主要版本。若需要匹配复核环境，使用Python 3.8.20及该锁定文件；CPU版PyTorch可单独安装：
+项目依赖列于 [requirements.txt](requirements.txt)，复核使用的主要版本列于 [requirements-reproduced.txt](requirements-reproduced.txt)，实测环境记录见 [environment.json](verification/environment.json)。
 
-```powershell
-python -m pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
-python -m pip install -r requirements-reproduced.txt
-```
+## 系统架构与模型
 
-本次复核是在已有环境完成，不声称已验证全新环境安装。原Scaler持久化版本为scikit-learn 1.3.0，本次1.3.2会产生版本提示。`venv`、`.idea`及`__pycache__`没有打包；原虚拟环境绑定他人电脑路径，应自行重建。
+系统按数据与模型层、应用服务层和展示层组织。训练脚本生成模型资产，服务端统一执行字段校验、特征排序、标准化、模型推理和结果封装，浏览器通过异步请求更新页面。
 
-## API使用
+![系统总体架构与推理流程](reports/fig_architecture.png)
+
+模型采用 `13 → 128 → 64 → 3` 的全连接结构，共10 243个可训练参数。隐藏层使用 ReLU，第一隐藏层后配置丢弃率为0.2的 Dropout。训练采用交叉熵损失和 Adam 优化器，学习率为0.001，权重衰减为0.0001，训练批大小为64，训练50轮。
+
+![多层感知机网络结构](reports/fig_network.png)
+
+StandardScaler 在训练子集上拟合并保存，服务端使用同一对象变换输入。特征顺序、标签映射和默认样例由 `model_metadata.json` 统一配置，连接训练、接口和页面三个环节。
+
+## 数据与实验结果
+
+项目使用1 453条课程演示样本，日期覆盖2022年1月1日至2025年12月23日。下跌、盘整和上涨类别分别为531、87和835条。随机分层实验采用8∶2划分，训练集为1 162条，验证集为291条。
+
+13维分类设定包含 `future_7d_return` 字段；12维对照使用剔除该字段后的特征集合。补充训练固定 NumPy 与 PyTorch 随机种子为2024，沿用相同隐藏层规模、优化器和训练轮数，比较输入信息条件下的分类结果。
+
+| 实验设定 | 验证准确率 | 宏平均F1 | 盘整召回率 |
+| --- | ---: | ---: | ---: |
+| 保存模型，13维 | 97.25% | 0.9150 | 77.78% |
+| 固定种子训练，13维 | 97.59% | 0.9240 | 77.78% |
+| 固定种子训练，12维 | 81.79% | 0.5570 | 0.00% |
+
+以下曲线对应保存的50轮训练历史，展示训练与验证准确率、损失的变化过程。
+
+![训练与验证准确率变化](reports/fig_accuracy.png)
+
+![训练与验证损失变化](reports/fig_loss.png)
+
+逐类指标、混淆矩阵、输入对照与时间顺序实验结果见 [verification_results.json](verification/verification_results.json)。
+
+## 接口调用
+
+| 方法 | 路径 | 功能 |
+| --- | --- | --- |
+| GET | `/` | 加载交互页面 |
+| GET | `/health` | 查询特征列表和类别信息 |
+| GET | `/status` | 查询服务描述、端点和端口 |
+| GET | `/metrics` | 读取50轮训练历史 |
+| POST | `/predict` | 执行单条或批量分类 |
+
+使用模型元数据中的默认样例发送单条预测请求：
 
 ```powershell
 $metadata = Get-Content .\models\model_metadata.json -Raw | ConvertFrom-Json
@@ -38,45 +79,36 @@ $body = $metadata.default_payload | ConvertTo-Json
 Invoke-RestMethod -Uri http://127.0.0.1:5001/predict -Method Post -ContentType 'application/json' -Body $body
 ```
 
-- GET `/`：表单页面。
-- GET `/health`：特征列表和类别。
-- GET `/status`：服务描述。
-- GET `/metrics`：50轮训练历史。
-- POST `/predict`：对象输入返回对象；对象数组返回数组。
+响应包含 `input`、`predicted_trend` 和 `probabilities`。对象输入返回单个预测对象，对象数组输入返回对应的结果数组。服务对内容类型、必需字段、数值转换和对象结构执行基础校验。
 
-字段顺序由model_metadata.json确定。默认样例包含未来收益率，仅用于复现旧原型，不是实时预测输入。
+## 训练与复核
 
-## 复核与补充实验
+执行模型训练：
 
 ```powershell
-python verification/verify_project.py
+.\.venv\Scripts\python.exe train_model.py
 ```
 
-脚本使用CPU和2个PyTorch线程，重建random_state=2024的原始8:2分层划分，评估保存模型并执行17个API场景。随后以随机种子2024进行13维随机划分、12维随机划分、12维时间划分加7条间隔三组诊断训练，每组50轮，深复制最佳状态，最后更新verification_results.json。它不修改models目录。补充实验验证集用于选轮，未提供独立测试集，也未进行多种子统计。
+训练更新 `models/` 中的权重、标准化器、元数据和训练历史。保留已有实验版本时，先复制该目录，再启动训练。
 
-原始代码与模型未作功能性修改；新增README、版本记录、verification脚本和结果均为本次提交整理与复核材料。
+执行模型与接口复核：
 
-## 已知限制
+```powershell
+.\.venv\Scripts\python.exe verification/verify_project.py
+```
 
-- 原训练输入存在未来收益率泄漏；其余指标时间可获得性也待核实。
-- `best_state = model.state_dict()`没有深复制，不能可靠保存最佳状态；无真实早停。
-- 原损失没有类别权重；没有SHAP、收益回归、交易回测或NLP模块。
-- 空数组、Infinity、float32溢出会产生500；负成交量未拒绝；NaN可进入结果。正常演示请使用有限且符合语义的数值。
-- 原app.py直接启动时监听0.0.0.0并启用debug；演示建议使用上述flask命令绑定127.0.0.1。
-- 概率显示为标签，未做校准；训练图表依赖CDN，无内置缩放插件。
-- 不支持跨平台位级重现保证，延迟结果只包含进程内测试客户端调用，不含浏览器或网络。
+复核脚本评估保存模型、执行接口场景，并运行13维与12维输入对照及时间顺序验证。补充训练使用 CPU 和2个 PyTorch 线程，每组50轮，以参数副本记录最佳验证状态，结果写入 `verification/verification_results.json`。
 
-## 原模型重训
+## 项目目录
 
-`python train_model.py`会覆盖models下的权重、标准化器、元数据和训练历史，重训前请先备份。原脚本未固定全部随机性，结果可能变化，且不会自动修复上述研究设计问题。
-
-## 目录
-
-app.py / train_model.py：原应用与训练代码
-templates/：原网页模板
-data/：1453条演示数据
-models/：原权重、Scaler、元数据和50轮日志
-reports/：原界面及历史曲线图片，历史曲线可能与当前JSON不一致
-verification/：新增复核脚本、结果、环境记录
-
-技术报告以当前JSON及复核结果为定量依据，历史文档的近似指标不作为新结论。核心原始资产的SHA256保存在verification_results.json中。
+```text
+app.py                          Flask应用与预测接口
+train_model.py                  数据处理、模型训练与评估
+requirements.txt                项目依赖
+requirements-reproduced.txt     复核环境的主要依赖版本
+templates/                      网页模板
+data/                           课程演示数据
+models/                         权重、标准化器、元数据和训练历史
+reports/                        交互界面、架构、网络结构和训练曲线
+verification/                   复核脚本、实验结果与环境记录
+```
