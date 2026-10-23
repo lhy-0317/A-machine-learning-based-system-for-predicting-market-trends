@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>市场趋势预测演示</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 40px;
+        background: #f7f8fb;
+        color: #1a1a1a;
+      }
+      h1 {
+        margin-bottom: 10px;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 18px 45px rgba(15, 26, 72, 0.08);
+      }
+      form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        color: #4b5563;
+      }
+      input {
+        margin-top: 6px;
+        padding: 10px 12px;
+        border: 1px solid #c7cedb;
+        border-radius: 8px;
+        font-size: 15px;
+      }
+      button {
+        grid-column: 1 / -1;
+        padding: 14px 16px;
+        background: #2563eb;
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .result-box {
+        margin-top: 28px;
+        padding: 20px;
+        border-radius: 12px;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        min-height: 80px;
+      }
+      .result-label {
+        font-weight: bold;
+        font-size: 18px;
+      }
+      .probs {
+        margin-top: 12px;
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .prob-item {
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 12px;
+        border: 1px solid #c7cedb;
+      }
+      .charts {
+        margin-top: 32px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+      }
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      .charts h2 {
+        margin-top: 0;
+      }
+      .charts h3 {
+        margin-bottom: 10px;
+        font-size: 15px;
+        color: #4b5563;
+      }
+      .footnote {
+        margin-top: 22px;
+        font-size: 13px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>市场趋势预测系统</h1>
+      <p>输入最新的市场特征，点击“预测”即可查看 7 日趋势判断与概率。</p>
+      <form id="predict-form">
+        {% for col in feature_columns %}
+        <label>
+          {{ col }}
+          <input
+            type="number"
+            step="any"
+            name="{{ col }}"
+            value="{{ default_payload[col] }}"
+            required
+          />
+        </label>
+        {% endfor %}
+        <button type="submit">预测</button>
+      </form>
+      <div class="result-box" id="result">
+        <span class="result-label">预测结果将在这里显示</span>
+      </div>
+
+      {% if has_history %}
+      <div class="charts">
+        <h2>训练指标可视化</h2>
+        <div class="chart-grid">
+          <div>
+            <h3>Accuracy</h3>
+            <canvas id="acc-chart" height="160"></canvas>
+          </div>
+          <div>
+            <h3>Loss</h3>
+            <canvas id="loss-chart" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="footnote">
+        API 入口仍可通过 <code>/health</code>、<code>/predict</code> 访问；本页面只是一个可视化壳层。
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const form = document.getElementById("predict-form");
+      const resultBox = document.getElementById("result");
+      const apiUrl = "/predict";
+
+      function renderResult(data) {
+        const { predicted_trend, probabilities } = data;
+        const probs = Object.entries(probabilities)
+          .map(([cls, prob]) => `<span class="prob-item">${cls}: ${(prob * 100).toFixed(1)}%</span>`)
+          .join("");
+        resultBox.innerHTML = `
+          <span class="result-label">预测趋势：${predicted_trend}</span>
+          <div class="probs">${probs}</div>
+        `;
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const payload = {};
+        formData.forEach((value, key) => {
+          payload[key] = Number(value);
+        });
+        const btn = form.querySelector("button");
+        btn.disabled = true;
+        btn.textContent = "预测中...";
+        resultBox.innerHTML = "正在请求模型...";
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          if (!response.ok) {
+            throw new Error(`API 返回 ${response.status}`);
+          }
+          const data = await response.json();
+          renderResult(data);
+        } catch (error) {
+          resultBox.innerHTML = `<span style="color:#dc2626">请求失败：${error.message}</span>`;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "预测";
+        }
+      });
+
+      async function loadMetrics() {
+        const section = document.querySelector(".charts");
+        if (!section) {
+          return;
+        }
+        try {
+          const response = await fetch("/metrics");
+          const data = await response.json();
+          const history = data.history || [];
+          if (!history.length) {
+            section.style.display = "none";
+            return;
+          }
+          const epochs = history.map((h) => h.epoch);
+          const trainAcc = history.map((h) => h.train_acc);
+          const valAcc = history.map((h) => h.val_acc);
+          const trainLoss = history.map((h) => h.train_loss);
+          const valLoss = history.map((h) => h.val_loss);
+
+          const commonOptions = {
+            responsive: true,
+            plugins: {
+              legend: { position: "bottom" },
+            },
+            scales: {
+              x: { title: { display: true, text: "Epoch" } },
+            },
+          };
+
+          new Chart(document.getElementById("acc-chart"), {
+            type: "line",
+            data: {
+              labels: epochs,
+              datasets: [
+                {
+                  label: "Train Acc",
+                  data: trainAcc,
+                  borderColor: "#2563eb",
+                  tension: 0.25,
+                },
+                {
+                  label: "Val Acc",
+                  data: valAcc,
+                  borderColor: "#10b981",
+                  tension: 0.25,
+                },
+              ],
+            },
+            options: commonOptions,
+          });
+
+          new Chart(document.getElementById("loss-chart"), {
+            type: "line",
+            data: {
+              labels: epochs,
+              datasets: [
+                {
+                  label: "Train Loss",
+                  data: trainLoss,
+                  borderColor: "#f97316",
+                  tension: 0.25,
+                },
+                {
+                  label: "Val Loss",
+                  data: valLoss,
+                  borderColor: "#ef4444",
+                  tension: 0.25,
+                },
+              ],
+            },
+            options: commonOptions,
+          });
+        } catch (error) {
+          console.error("加载训练指标失败", error);
+        }
+      }
+
+      loadMetrics();
+    </script>
+  </body>
+</html>

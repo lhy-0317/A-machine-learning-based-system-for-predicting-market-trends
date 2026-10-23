@@ -1,0 +1,644 @@
+{
+  "verification_date": "2026-10-23",
+  "environment": {
+    "python": "3.8.20",
+    "torch": "2.4.1+cpu",
+    "sklearn": "1.3.2",
+    "pandas": "2.0.3",
+    "numpy": "1.24.4",
+    "joblib": "1.4.2",
+    "flask": "3.0.3",
+    "device": "CPU",
+    "threads": 2
+  },
+  "dataset": {
+    "rows": 1453,
+    "columns": 15,
+    "start": "2022-01-01",
+    "end": "2025-12-23",
+    "missing": 0,
+    "duplicates": 0,
+    "date_duplicates": 0,
+    "daily_continuous": true,
+    "class_counts": {
+      "bullish": 835,
+      "bearish": 531,
+      "sideways": 87
+    },
+    "future_return_ranges": {
+      "bearish": {
+        "min": -0.2306,
+        "max": -0.0102
+      },
+      "bullish": {
+        "min": 0.01,
+        "max": 0.3561
+      },
+      "sideways": {
+        "min": -0.01,
+        "max": 0.0098
+      }
+    }
+  },
+  "split": {
+    "train": 1162,
+    "validation": 291,
+    "train_counts": {
+      "bearish": 425,
+      "sideways": 69,
+      "bullish": 668
+    },
+    "validation_counts": {
+      "bearish": 106,
+      "sideways": 18,
+      "bullish": 167
+    }
+  },
+  "scaler_max_mean_difference": 0.0,
+  "saved_model": {
+    "accuracy": 0.9725085910652921,
+    "macro_f1": 0.915041957144242,
+    "report": {
+      "bearish": {
+        "precision": 0.9809523809523809,
+        "recall": 0.9716981132075472,
+        "f1-score": 0.976303317535545,
+        "support": 106.0
+      },
+      "sideways": {
+        "precision": 0.7777777777777778,
+        "recall": 0.7777777777777778,
+        "f1-score": 0.7777777777777778,
+        "support": 18.0
+      },
+      "bullish": {
+        "precision": 0.9880952380952381,
+        "recall": 0.9940119760479041,
+        "f1-score": 0.991044776119403,
+        "support": 167.0
+      },
+      "accuracy": 0.9725085910652921,
+      "macro avg": {
+        "precision": 0.9156084656084656,
+        "recall": 0.9144959556777431,
+        "f1-score": 0.915041957144242,
+        "support": 291.0
+      },
+      "weighted avg": {
+        "precision": 0.9724840451644575,
+        "recall": 0.9725085910652921,
+        "f1-score": 0.9724832620986533,
+        "support": 291.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        103,
+        3,
+        0
+      ],
+      [
+        2,
+        14,
+        2
+      ],
+      [
+        0,
+        1,
+        166
+      ]
+    ],
+    "parameter_count": 10243
+  },
+  "majority_baseline": {
+    "accuracy": 0.5738831615120275,
+    "macro_f1": 0.24308588064046577
+  },
+  "assets_sha256": {
+    "app.py": "86dc106ac7e6a3ff134a2af3fc0f2f4a63c12548dd66eee7c6b43b7cfb0b2f75",
+    "train_model.py": "b5dc987b76a92b4300f2e7fc4e075e2eceeb204c513b21b62dfade7b9060df5a",
+    "models\\market_trend_model.pth": "0ed599f8af943d3656ffbcae6c35f2fab3e1aafc782155262817ffac8afc7726",
+    "models\\feature_scaler.pkl": "42fd46c58ce194afc52fa87ec134454a92c0815d63812d9d9bcfe4dfa3cd9007",
+    "models\\training_history.json": "1aa842049f2ab0f6149208ce1e956223607f7b8eb6c89cbc5bdb18a520449ee2",
+    "data\\market_forecast_dataset.csv": "6865f1cf7b2714dab904e270f6a0876888a0f65c9f26b4c565175a58e1299acc"
+  },
+  "api_tests": [
+    {
+      "name": "index",
+      "expected": 200,
+      "status": 200,
+      "body": "html"
+    },
+    {
+      "name": "health",
+      "expected": 200,
+      "status": 200,
+      "body": {
+        "classes": [
+          "bearish",
+          "sideways",
+          "bullish"
+        ],
+        "features": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume",
+          "macro_index",
+          "sector_growth",
+          "consumer_sentiment",
+          "inflation_expectation",
+          "search_trend_index",
+          "news_sentiment",
+          "global_supply_risk",
+          "future_7d_return"
+        ],
+        "status": "ok"
+      }
+    },
+    {
+      "name": "status",
+      "expected": 200,
+      "status": 200,
+      "body": {
+        "endpoints": {
+          "health": "/health",
+          "predict": "/predict",
+          "ui": "/"
+        },
+        "message": "Market prediction API is running.",
+        "port": 5001
+      }
+    },
+    {
+      "name": "metrics",
+      "expected": 200,
+      "status": 200,
+      "body": {
+        "history_length": 50
+      }
+    },
+    {
+      "name": "single",
+      "expected": 200,
+      "status": 200,
+      "body": {
+        "input": {
+          "close": 100725.3043,
+          "consumer_sentiment": 74.4038,
+          "future_7d_return": 0.348,
+          "global_supply_risk": 30.0116,
+          "high": 100873.3438,
+          "inflation_expectation": 2.2959,
+          "low": 96554.4786,
+          "macro_index": 54.2642,
+          "news_sentiment": -0.1717,
+          "open": 96696.5969,
+          "search_trend_index": 72.4347,
+          "sector_growth": 18.6984,
+          "volume": 2120035.0
+        },
+        "predicted_trend": "bullish",
+        "probabilities": {
+          "bearish": 1.3034682133364443e-39,
+          "bullish": 1.0,
+          "sideways": 5.084825015946424e-19
+        }
+      }
+    },
+    {
+      "name": "batch",
+      "expected": 200,
+      "status": 200,
+      "body": [
+        {
+          "input": {
+            "close": 100725.3043,
+            "consumer_sentiment": 74.4038,
+            "future_7d_return": 0.348,
+            "global_supply_risk": 30.0116,
+            "high": 100873.3438,
+            "inflation_expectation": 2.2959,
+            "low": 96554.4786,
+            "macro_index": 54.2642,
+            "news_sentiment": -0.1717,
+            "open": 96696.5969,
+            "search_trend_index": 72.4347,
+            "sector_growth": 18.6984,
+            "volume": 2120035.0
+          },
+          "predicted_trend": "bullish",
+          "probabilities": {
+            "bearish": 1.3034682133364443e-39,
+            "bullish": 1.0,
+            "sideways": 5.084844661485972e-19
+          }
+        },
+        {
+          "input": {
+            "close": 100725.3043,
+            "consumer_sentiment": 74.4038,
+            "future_7d_return": 0.348,
+            "global_supply_risk": 30.0116,
+            "high": 100873.3438,
+            "inflation_expectation": 2.2959,
+            "low": 96554.4786,
+            "macro_index": 54.2642,
+            "news_sentiment": -0.1717,
+            "open": 96696.5969,
+            "search_trend_index": 72.4347,
+            "sector_growth": 18.6984,
+            "volume": 2120035.0
+          },
+          "predicted_trend": "bullish",
+          "probabilities": {
+            "bearish": 1.3034682133364443e-39,
+            "bullish": 1.0,
+            "sideways": 5.084844661485972e-19
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong_content_type",
+      "expected": 415,
+      "status": 415,
+      "body": {
+        "error": "Content-Type must be application/json"
+      }
+    },
+    {
+      "name": "missing_open",
+      "expected": 400,
+      "status": 400,
+      "body": {
+        "error": "Missing field: open"
+      }
+    },
+    {
+      "name": "invalid_number",
+      "expected": 400,
+      "status": 400,
+      "body": {
+        "error": "Invalid value: could not convert string to float: 'not-a-number'"
+      }
+    },
+    {
+      "name": "scalar_body",
+      "expected": 400,
+      "status": 400,
+      "body": {
+        "error": "JSON body must be an object or a list of objects"
+      }
+    },
+    {
+      "name": "non_object_item",
+      "expected": 400,
+      "status": 400,
+      "body": {
+        "error": "Each item must be an object"
+      }
+    },
+    {
+      "name": "empty_batch",
+      "expected": 400,
+      "status": 500,
+      "body": null
+    },
+    {
+      "name": "invalid_json",
+      "expected": 400,
+      "status": 400,
+      "body": null
+    },
+    {
+      "name": "negative_volume",
+      "expected": 400,
+      "status": 200,
+      "body": {
+        "input": {
+          "close": 100725.3043,
+          "consumer_sentiment": 74.4038,
+          "future_7d_return": 0.348,
+          "global_supply_risk": 30.0116,
+          "high": 100873.3438,
+          "inflation_expectation": 2.2959,
+          "low": 96554.4786,
+          "macro_index": 54.2642,
+          "news_sentiment": -0.1717,
+          "open": 96696.5969,
+          "search_trend_index": 72.4347,
+          "sector_growth": 18.6984,
+          "volume": -1
+        },
+        "predicted_trend": "bullish",
+        "probabilities": {
+          "bearish": 1.840748044944469e-38,
+          "bullish": 1.0,
+          "sideways": 1.784200457136054e-18
+        }
+      }
+    },
+    {
+      "name": "string_nan",
+      "expected": 400,
+      "status": 200,
+      "body": {
+        "input": {
+          "close": 100725.3043,
+          "consumer_sentiment": 74.4038,
+          "future_7d_return": 0.348,
+          "global_supply_risk": 30.0116,
+          "high": 100873.3438,
+          "inflation_expectation": 2.2959,
+          "low": 96554.4786,
+          "macro_index": 54.2642,
+          "news_sentiment": -0.1717,
+          "open": "NaN",
+          "search_trend_index": 72.4347,
+          "sector_growth": 18.6984,
+          "volume": 2120035.0
+        },
+        "predicted_trend": "bearish",
+        "probabilities": {
+          "bearish": "nan",
+          "bullish": "nan",
+          "sideways": "nan"
+        }
+      }
+    },
+    {
+      "name": "string_inf",
+      "expected": 400,
+      "status": 500,
+      "body": null
+    },
+    {
+      "name": "huge_number",
+      "expected": 400,
+      "status": 500,
+      "body": null
+    }
+  ],
+  "inprocess_latency_ms": {
+    "n": 100,
+    "warmup": 10,
+    "mean": 0.6949459999999961,
+    "median": 0.6184000000000189,
+    "p95": 1.1398550000008
+  },
+  "supplementary_experiments": [
+    {
+      "name": "13_features_random_split",
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "macro_index",
+        "sector_growth",
+        "consumer_sentiment",
+        "inflation_expectation",
+        "search_trend_index",
+        "news_sentiment",
+        "global_supply_risk",
+        "future_7d_return"
+      ],
+      "n_train": 1162,
+      "n_validation": 291,
+      "train_end": "2024-08-27",
+      "validation_start": "2022-02-09",
+      "selected_epoch": 45,
+      "accuracy": 0.9759450171821306,
+      "macro_f1": 0.9240167679336818,
+      "report": {
+        "bearish": {
+          "precision": 0.9903846153846154,
+          "recall": 0.9716981132075472,
+          "f1-score": 0.9809523809523809,
+          "support": 106.0
+        },
+        "sideways": {
+          "precision": 0.8235294117647058,
+          "recall": 0.7777777777777778,
+          "f1-score": 0.7999999999999999,
+          "support": 18.0
+        },
+        "bullish": {
+          "precision": 0.9823529411764705,
+          "recall": 1.0,
+          "f1-score": 0.9910979228486646,
+          "support": 167.0
+        },
+        "accuracy": 0.9759450171821306,
+        "macro avg": {
+          "precision": 0.9320889894419305,
+          "recall": 0.916491963661775,
+          "f1-score": 0.9240167679336818,
+          "support": 291.0
+        },
+        "weighted avg": {
+          "precision": 0.9754544323677131,
+          "recall": 0.9759450171821306,
+          "f1-score": 0.9755818058305135,
+          "support": 291.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          103,
+          3,
+          0
+        ],
+        [
+          1,
+          14,
+          3
+        ],
+        [
+          0,
+          0,
+          167
+        ]
+      ]
+    },
+    {
+      "name": "12_features_random_split",
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "macro_index",
+        "sector_growth",
+        "consumer_sentiment",
+        "inflation_expectation",
+        "search_trend_index",
+        "news_sentiment",
+        "global_supply_risk"
+      ],
+      "n_train": 1162,
+      "n_validation": 291,
+      "train_end": "2024-08-27",
+      "validation_start": "2022-02-09",
+      "selected_epoch": 12,
+      "accuracy": 0.8178694158075601,
+      "macro_f1": 0.5570052196702857,
+      "report": {
+        "bearish": {
+          "precision": 0.7652173913043478,
+          "recall": 0.8301886792452831,
+          "f1-score": 0.7963800904977375,
+          "support": 106.0
+        },
+        "sideways": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 18.0
+        },
+        "bullish": {
+          "precision": 0.8522727272727273,
+          "recall": 0.8982035928143712,
+          "f1-score": 0.8746355685131195,
+          "support": 167.0
+        },
+        "accuracy": 0.8178694158075601,
+        "macro avg": {
+          "precision": 0.539163372859025,
+          "recall": 0.5761307573532181,
+          "f1-score": 0.5570052196702857,
+          "support": 291.0
+        },
+        "weighted avg": {
+          "precision": 0.7678439482227023,
+          "recall": 0.8178694158075601,
+          "f1-score": 0.7920289674723408,
+          "support": 291.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          88,
+          0,
+          18
+        ],
+        [
+          10,
+          0,
+          8
+        ],
+        [
+          17,
+          0,
+          150
+        ]
+      ]
+    },
+    {
+      "name": "12_features_time_split_gap7",
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "macro_index",
+        "sector_growth",
+        "consumer_sentiment",
+        "inflation_expectation",
+        "search_trend_index",
+        "news_sentiment",
+        "global_supply_risk"
+      ],
+      "n_train": 1155,
+      "n_validation": 291,
+      "train_end": "2025-02-28",
+      "validation_start": "2025-03-08",
+      "selected_epoch": 41,
+      "accuracy": 0.9862542955326461,
+      "macro_f1": 0.33102652825836215,
+      "report": {
+        "bearish": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "sideways": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "bullish": {
+          "precision": 1.0,
+          "recall": 0.9862542955326461,
+          "f1-score": 0.9930795847750865,
+          "support": 291.0
+        },
+        "micro avg": {
+          "precision": 0.9862542955326461,
+          "recall": 0.9862542955326461,
+          "f1-score": 0.9862542955326461,
+          "support": 291.0
+        },
+        "macro avg": {
+          "precision": 0.3333333333333333,
+          "recall": 0.32875143184421535,
+          "f1-score": 0.33102652825836215,
+          "support": 291.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 0.9862542955326461,
+          "f1-score": 0.9930795847750864,
+          "support": 291.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          287
+        ]
+      ]
+    }
+  ],
+  "history_summary": {
+    "first": {
+      "epoch": 1,
+      "train_loss": 0.8965708866792373,
+      "train_acc": 0.7271944922547332,
+      "val_loss": 0.6883653588721023,
+      "val_acc": 0.8281786941580757
+    },
+    "last": {
+      "epoch": 50,
+      "train_loss": 0.04489387647471617,
+      "train_acc": 0.9819277108433735,
+      "val_loss": 0.08051175099263076,
+      "val_acc": 0.9725085910652921
+    },
+    "best": {
+      "epoch": 48,
+      "train_loss": 0.05398071214890111,
+      "train_acc": 0.9776247848537005,
+      "val_loss": 0.08574857498771955,
+      "val_acc": 0.9759450171821306
+    }
+  }
+}

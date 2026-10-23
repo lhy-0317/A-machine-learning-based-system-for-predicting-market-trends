@@ -1,0 +1,64 @@
+# Python 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Python 缓存、测试缓存和构建产物
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE 和操作系统本地文件
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 本地配置和密钥（允许提交配置示例）
+.env
+.env.*
+!.env.example
+!.env.sample
+.flaskenv
+instance/
+*.pem
+*.key
+
+# 日志和临时文件
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+tmp/
+temp/
+
+# 不提交视频和重复打包文件
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.zip
+*.7z
+*.rar
+
+# 保留 data/、models/、reports/、verification/：
+# 数据集、预训练权重、Scaler、元数据、训练日志、截图与复核结果均需提交。

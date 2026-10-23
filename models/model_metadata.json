@@ -1,0 +1,38 @@
+{
+  "feature_columns": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "macro_index",
+    "sector_growth",
+    "consumer_sentiment",
+    "inflation_expectation",
+    "search_trend_index",
+    "news_sentiment",
+    "global_supply_risk",
+    "future_7d_return"
+  ],
+  "label_map": {
+    "bearish": 0,
+    "sideways": 1,
+    "bullish": 2
+  },
+  "input_dim": 13,
+  "default_payload": {
+    "open": 96696.5969,
+    "high": 100873.3438,
+    "low": 96554.4786,
+    "close": 100725.3043,
+    "volume": 2120035.0,
+    "macro_index": 54.2642,
+    "sector_growth": 18.6984,
+    "consumer_sentiment": 74.4038,
+    "inflation_expectation": 2.2959,
+    "search_trend_index": 72.4347,
+    "news_sentiment": -0.1717,
+    "global_supply_risk": 30.0116,
+    "future_7d_return": 0.348
+  }
+}
